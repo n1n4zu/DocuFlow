@@ -1,7 +1,7 @@
-import os
-import importlib.util
+import os, importlib.util, argparse
 from functools import wraps
 from typing import Dict, Any, List
+from .docu_files import pdf_doc
 
 _developer_comments: Dict[str, Dict[str, Any]] = {}
 _current_file: str = ''
@@ -58,8 +58,16 @@ def get_comments() -> Dict[str, Dict[str, Any]]:
     return _developer_comments.copy()
 
 @comment('Creates documentation by dynamically importing .py files')
-def documentation(base_dir='.'):
+def docuflow(base_dir='.'):
     global _developer_comments, _current_file, _temp_args, _temp_return
+
+    parser = argparse.ArgumentParser(description="")
+
+    parser.add_argument('--pdf', nargs='?', const='documentation.pdf', type=str, help='Generates pdf documentation')
+    parser.add_argument('--output', nargs='?', const='documentation', type=str, help='Output name')
+    parser.add_argument('--html', nargs='?', const='documentation.html', type=str, help='Generates html documentation')
+
+    args = parser.parse_args()
 
     for root, dirs, files in os.walk(base_dir):
         dirs[:] = [d for d in dirs if not d.startswith('.') and d != '__pycache__']
@@ -71,7 +79,7 @@ def documentation(base_dir='.'):
                 rel_path = os.path.relpath(full_path, base_dir)
                 module_name = os.path.splitext(rel_path)[0].replace(os.sep, '.')
 
-                _developer_comments = {}
+                # _developer_comments = {}
                 _temp_args = {}
                 _temp_return = {}
                 _current_file = rel_path
@@ -85,16 +93,6 @@ def documentation(base_dir='.'):
                     print(f"Błąd importowania {rel_path}: {e}")
                     continue
 
-                print(f"\nPlik: {rel_path}")
-                for name, data in get_comments().items():
-                    print(f"{data['type'].capitalize()} '{name}':")
-                    print(f"\"{data['comment']}\"")
-                    if data['args']:
-                        print("Args:")
-                        for a in data['args']:
-                            print(f"- {a}")
-                    if data['return']:
-                        print("Returns:")
-                        for r in data['return']:
-                            print(f"- {r}")
-                print()
+
+    if args.pdf:
+        pdf_doc(_developer_comments, args.output)

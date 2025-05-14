@@ -1,8 +1,10 @@
-from DocuFlow.docuflow import comment
+from DocuFlow.docuflow import comment, args, returns
 
 @comment('''
 Test file
 second line line
 ''')
+@returns('test text')
+@returns('second test text')
 def main():
-    print("Test file")
+    return "Test file", "second line"
